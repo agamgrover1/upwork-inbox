@@ -98,6 +98,22 @@ Set `UPWORK_ALLOW_WRITES=true` *only* alongside a human confirmation step in the
 UI. Upwork's policy names proposal and invite spam explicitly. Keep every write
 human-initiated: no auto-apply, no auto-send.
 
+## Run it locally
+
+The portal needs a Postgres, a GoTrue and a PostgREST behind one URL — the same
+three the server runs. One script stands them up in Docker, applies the schema
+and creates the first owner:
+
+```bash
+npm install
+OWNER_EMAIL=you@example.com AGENCY_NAME="Your Agency" ./scripts/dev-stack.sh up
+npm run dev                    # → http://localhost:3000
+```
+
+It prints the owner's password once. `./scripts/dev-stack.sh down` removes
+everything. Connecting an Upwork profile still needs OAuth credentials — see
+below — but every screen renders without one.
+
 ## Setup
 
 ```bash

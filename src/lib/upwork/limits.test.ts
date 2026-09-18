@@ -3,7 +3,6 @@ import { test } from 'node:test'
 
 import {
   isKnownTool,
-  isWriteAllowed,
   isWriteTool,
   qualifiedToolName,
   SELF_IMPOSED,
@@ -89,8 +88,23 @@ test('every mutating Upwork tool is marked as a write', () => {
 })
 
 test('known write tools are all flagged', () => {
-  for (const name of ['send_message', 'manage_proposals', 'submit_milestones', 'confirm_draft'] as ToolName[]) {
+  for (const name of [
+    'send_message',
+    'start_attachment_upload',
+    'store_uploaded_files',
+    'confirm_attachment_upload',
+  ] as ToolName[]) {
     assert.equal(isWriteTool(name), true, `${name} must be a write`)
+  }
+})
+
+test('proposal and milestone tools are not in the policy at all', () => {
+  // This copy of the portal is an inbox. A tool absent from the map cannot be
+  // called — the request is refused before it is built — which is stricter
+  // than listing it as a blocked write, and there is nothing here that should
+  // ever know those tools exist.
+  for (const name of ['manage_proposals', 'confirm_draft', 'submit_milestones', 'find_jobs']) {
+    assert.equal(isKnownTool(name), false, `${name} should not be a known tool`)
   }
 })
 
@@ -238,35 +252,4 @@ test('the attachment upload chain is allowlisted and gated as writes', () => {
   // Reading back the upload's status changes nothing.
   assert.equal(isKnownTool('get_upload_status' as ToolName), true)
   assert.equal(isWriteTool('get_upload_status' as ToolName), false)
-})
-
-// ---------------------------------------------------------------------------
-// Phase 3 draws a line and this is where it is held.
-// ---------------------------------------------------------------------------
-
-test('the portal can draft a proposal but cannot submit one', () => {
-  // Upwork's automation policy names proposal spam specifically, and the whole
-  // shape of Bid Room is built around a person reading every submission. These
-  // two tools are what submission actually IS: manage_proposals prepares it,
-  // confirm_draft sends it. Neither may be enabled by the drafting phase.
-  //
-  // If this test fails because someone added them to the default allowlist, that
-  // is phase 4 and it is a decision, not a refactor.
-  process.env.UPWORK_ALLOWED_WRITES = 'send_message,start_attachment_upload'
-
-  assert.equal(isWriteAllowed('manage_proposals'), false)
-  assert.equal(isWriteAllowed('confirm_draft'), false)
-  assert.equal(isWriteAllowed('send_message'), true, 'replying to clients is unaffected')
-})
-
-test('both submission tools are still declared writes, so nothing can call them by accident', () => {
-  assert.equal(isWriteTool('manage_proposals'), true)
-  assert.equal(isWriteTool('confirm_draft'), true)
-})
-
-test('an empty allowlist arms nothing at all', () => {
-  process.env.UPWORK_ALLOWED_WRITES = ''
-  assert.equal(isWriteAllowed('manage_proposals'), false)
-  assert.equal(isWriteAllowed('confirm_draft'), false)
-  assert.equal(isWriteAllowed('send_message'), false)
 })

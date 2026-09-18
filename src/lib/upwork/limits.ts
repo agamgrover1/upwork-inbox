@@ -108,7 +108,7 @@ export const SELF_IMPOSED = {
  * This is an ALLOWLIST, not a blocklist: a tool absent from this map cannot be
  * called at all, and the call is refused before any network request happens.
  * That is what stops a bug — or a future careless edit — from ever reaching
- * `manage_proposals` or `send_message` unattended.
+ * `send_message` unattended.
  */
 export const TOOL_POLICY = {
   // --- reads -------------------------------------------------------------
@@ -119,6 +119,7 @@ export const TOOL_POLICY = {
   list_contracts: { write: false },
   list_milestones: { write: false },
   list_offers: { write: false },
+  // Names the job posting behind a conversation; nothing here submits one.
   list_freelancer_proposals: { write: false },
   get_freelancer_dashboard: { write: false },
   get_agency_dashboard: { write: false },
@@ -137,9 +138,6 @@ export const TOOL_POLICY = {
   store_uploaded_files: { write: true },
   get_upload_status: { write: false },
   confirm_attachment_upload: { write: true },
-  manage_proposals: { write: true },
-  submit_milestones: { write: true },
-  confirm_draft: { write: true },
 } as const
 
 export type ToolName = keyof typeof TOOL_POLICY
@@ -176,7 +174,7 @@ export function isWriteTool(name: ToolName): boolean {
  * capabilities deserve separate decisions.
  *
  *   UPWORK_ALLOWED_WRITES=send_message
- *   UPWORK_ALLOWED_WRITES=send_message,submit_milestones
+ *   UPWORK_ALLOWED_WRITES=send_message,start_attachment_upload,store_uploaded_files,confirm_attachment_upload
  *
  * Unset means no writes at all. An unrecognised name is ignored rather than
  * silently widening the gate.
